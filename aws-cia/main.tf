@@ -5,12 +5,23 @@ provider "aws" {
 
 resource "aws_key_pair" "ssh_key" {
   key_name   = "macos"
-  public_key = file("~/.ssh/id_rsa.pub")
+  public_key = file(var.ssh_pub)
 }
 
 resource "aws_eip" "pub_static" {
   instance = aws_instance.amz-webserver.id
   vpc      = true
+  depends_on = [ aws_instance.amz-webserver, ]
+  provisioner "remote-exec" {
+    when = destroy
+    inline = ["sudo poweroff"]
+    on_failure = continue
+    connection {
+        user = "centos"
+        host = "${self.public_dns}"
+        private_key = file("~/.ssh/id_rsa")
+      }
+  }
 }
 
 resource "aws_security_group" "web-server" {
@@ -56,39 +67,13 @@ resource "aws_instance" "amz-webserver" {
   tags = {
         Name = "webserver"
   }
-  provisioner "remote-exec" {
-    when = destroy
-    inline = ["sudo poweroff"]
-    on_failure = continue
-
-    connection {
-        user = "centos"
-        host = "aws_eip.pub_static.public_ip"
-        private_key = file("~/.ssh/id_rsa")
-      }
-  }
 }
 
-# creating and attaching ebs volume
 
-#resource "aws_ebs_volume" "data-vol" {
-#  availability_zone = var.az
-#  size = 1
-#  tags = {
-#        Name = "data-volume"
-# }
-#
-#}
-
-#resource "aws_volume_attachment" "web-data-vol" {
-# device_name = "/dev/sdc"
-# volume_id = aws_ebs_volume.data-vol.id
-# instance_id = aws_instance.amz-webserver.id
-#
-#}
 output "pub_dns" {
   value = "${aws_eip.pub_static.public_dns}"
 }
 output "new_pub_address" {
   value = "${aws_eip.pub_static.public_ip}"
 }
+

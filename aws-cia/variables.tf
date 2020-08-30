@@ -34,3 +34,9 @@ variable "image" {
 variable "instance_size" {
   default = "t2.micro"
 }
+variable "ssh_priv" {
+  default = "~/.ssh/id_rsa"
+}
+variable "ssh_pub" {
+  default = "~/.ssh/id_rsa.pub"
+}

@@ -1,5 +1,6 @@
 #! /bin/bash
-sudo yum install epel-release -y && sudo yum update -y
+sudo yum install epel-release -y  
+#sudo yum update -y
 sudo yum install httpd -y
 sudo systemctl start httpd
 sudo systemctl enable httpd
